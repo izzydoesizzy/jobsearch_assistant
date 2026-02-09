@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Job Search Prompts Library</title>
     <link rel="stylesheet" href="styles.css" />
-    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.min.js"></script>
     <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
   </head>
   <body>
@@ -55,6 +54,7 @@
           <div class="upload-grid">
             <label class="upload-item">Resume (required)
               <input type="file" id="resumeFile" accept=".txt,.md,.pdf,.doc,.docx" />
+              <span id="resumeParserStatus" class="parser-status">Checking PDF parser...</span>
               <div class="source-controls">
                 <button type="button" class="toggle-paste-btn" data-key="resume" id="resumeTogglePaste">Paste text instead</button>
                 <select id="resumeMode" class="source-mode-select" aria-label="Resume source mode">
@@ -68,6 +68,7 @@
             </label>
             <label class="upload-item">LinkedIn Profile (optional)
               <input type="file" id="linkedinFile" accept=".txt,.md,.pdf,.doc,.docx" />
+              <span id="linkedinParserStatus" class="parser-status">Checking PDF parser...</span>
               <div class="source-controls">
                 <button type="button" class="toggle-paste-btn" data-key="linkedin" id="linkedinTogglePaste">Paste text instead</button>
                 <select id="linkedinMode" class="source-mode-select" aria-label="LinkedIn source mode">
@@ -81,6 +82,7 @@
             </label>
             <label class="upload-item">Voice Transcript (optional)
               <input type="file" id="voiceFile" accept=".txt,.md,.pdf,.doc,.docx" />
+              <span id="voiceParserStatus" class="parser-status">Checking PDF parser...</span>
               <div class="source-controls">
                 <button type="button" class="toggle-paste-btn" data-key="voice" id="voiceTogglePaste">Paste text instead</button>
                 <select id="voiceMode" class="source-mode-select" aria-label="Voice source mode">
@@ -94,6 +96,7 @@
             </label>
             <label class="upload-item">Job Posting (optional)
               <input type="file" id="jobFile" accept=".txt,.md,.pdf,.doc,.docx" />
+              <span id="jobParserStatus" class="parser-status">Checking PDF parser...</span>
               <div class="source-controls">
                 <button type="button" class="toggle-paste-btn" data-key="job" id="jobTogglePaste">Paste text instead</button>
                 <select id="jobMode" class="source-mode-select" aria-label="Job source mode">
@@ -128,6 +131,7 @@
       </section>
     </main>
 
+    <script src="pdf-loader.js"></script>
     <script src="data.js"></script>
     <script src="config.js"></script>
     <script src="app.js"></script>
