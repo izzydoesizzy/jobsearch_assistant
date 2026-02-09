@@ -13,6 +13,10 @@ const els = {
   linkedinStatus: document.getElementById("linkedinStatus"),
   voiceStatus: document.getElementById("voiceStatus"),
   jobStatus: document.getElementById("jobStatus"),
+  resumeParserStatus: document.getElementById("resumeParserStatus"),
+  linkedinParserStatus: document.getElementById("linkedinParserStatus"),
+  voiceParserStatus: document.getElementById("voiceParserStatus"),
+  jobParserStatus: document.getElementById("jobParserStatus"),
   markdownOutput: document.getElementById("markdownOutput"),
   downloadMd: document.getElementById("downloadMd")
 };
@@ -20,13 +24,43 @@ const els = {
 const state = {
   selectedPrompts: new Set(),
   outputMarkdown: "",
-  context: { resume: "", linkedin: "", voice: "", job: "" }
+  context: { resume: "", linkedin: "", voice: "", job: "" },
+  pdfParserReady: Boolean(window.pdfjsLib)
 };
 
 const storageKeys = { apiKey: "jobPromptOpenAIKey", model: "jobPromptModel" };
 
-if (window.pdfjsLib) {
-  window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.worker.min.js";
+function parserError(code, message) {
+  const error = new Error(message);
+  error.code = code;
+  return error;
+}
+
+function getPdfParserStatusText() {
+  return state.pdfParserReady ? "PDF parsing ready" : "PDF parsing unavailable";
+}
+
+function updateParserStatusUIs() {
+  const text = getPdfParserStatusText();
+  [
+    els.resumeParserStatus,
+    els.linkedinParserStatus,
+    els.voiceParserStatus,
+    els.jobParserStatus
+  ].forEach((statusEl) => {
+    statusEl.textContent = text;
+    statusEl.classList.toggle("is-unavailable", !state.pdfParserReady);
+  });
+}
+
+async function ensurePdfParserReady() {
+  if (state.pdfParserReady && window.pdfjsLib) return true;
+  if (window.pdfParserReady && typeof window.pdfParserReady.then === "function") {
+    await window.pdfParserReady;
+  }
+  state.pdfParserReady = Boolean(window.pdfjsLib && window.pdfParserStatus?.ready);
+  updateParserStatusUIs();
+  return state.pdfParserReady;
 }
 
 function renderPromptChecklist() {
@@ -60,7 +94,14 @@ function updateSelectedCount() {
 }
 
 async function extractPdfText(file) {
-  if (!window.pdfjsLib) throw new Error("PDF parser unavailable.");
+  const ready = await ensurePdfParserReady();
+  if (!ready || !window.pdfjsLib) {
+    throw parserError(
+      "PARSER_UNAVAILABLE",
+      "PDF parser unavailable. Reload the page and retry, or export the PDF as .txt/.docx before uploading."
+    );
+  }
+
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   const chunks = [];
@@ -69,7 +110,16 @@ async function extractPdfText(file) {
     const content = await page.getTextContent();
     chunks.push(content.items.map((item) => item.str).join(" "));
   }
-  return chunks.join("\n\n");
+
+  const extracted = chunks.join("\n\n").trim();
+  if (!extracted) {
+    throw parserError(
+      "NO_EXTRACTABLE_TEXT",
+      "No extractable text found in this PDF. It may be scanned/image-based. Please run OCR and export as .txt or searchable PDF, then upload again."
+    );
+  }
+
+  return extracted;
 }
 
 async function extractDocxText(file) {
@@ -81,11 +131,22 @@ async function extractDocxText(file) {
 
 async function fileToText(file) {
   const name = file.name.toLowerCase();
+
   if (name.endsWith(".txt") || name.endsWith(".md") || name.endsWith(".json") || name.endsWith(".csv")) return file.text();
   if (name.endsWith(".pdf")) return extractPdfText(file);
   if (name.endsWith(".docx")) return extractDocxText(file);
-  if (name.endsWith(".doc")) throw new Error(".doc is not supported for browser parsing. Please export as .docx or .txt.");
-  throw new Error("Unsupported file type. Use txt, md, pdf, or docx.");
+
+  if (name.endsWith(".doc")) {
+    throw parserError(
+      "UNSUPPORTED_FILE_FORMAT",
+      "Unsupported file format (.doc). Please export as .docx, .txt, .md, or searchable PDF."
+    );
+  }
+
+  throw parserError(
+    "UNSUPPORTED_FILE_FORMAT",
+    "Unsupported file format. Please use .txt, .md, .pdf, or .docx."
+  );
 }
 
 function bindUpload(inputEl, statusEl, key) {
@@ -221,7 +282,7 @@ function downloadMarkdown() {
   URL.revokeObjectURL(url);
 }
 
-function init() {
+async function init() {
   els.apiKey.value = localStorage.getItem(storageKeys.apiKey) || "";
   els.modelName.value = localStorage.getItem(storageKeys.model) || "gpt-4.1-mini";
 
@@ -234,6 +295,9 @@ function init() {
   bindUpload(els.linkedinFile, els.linkedinStatus, "linkedin");
   bindUpload(els.voiceFile, els.voiceStatus, "voice");
   bindUpload(els.jobFile, els.jobStatus, "job");
+
+  await ensurePdfParserReady();
+  updateParserStatusUIs();
 }
 
 init();

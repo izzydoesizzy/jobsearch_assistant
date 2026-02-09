@@ -132,3 +132,12 @@ Then open `http://localhost:8080`.
 - Confirm your API key is valid and active.
 - Confirm your selected model is available to your key.
 - Check browser devtools/network for details from the OpenAI API response.
+
+### PDF extraction limitations
+
+PDF extraction depends on an in-browser parser. If a PDF upload fails, there are two common causes:
+
+- **Parser unavailable**: your browser could not load the PDF parser dependency.
+- **No extractable text**: the file is a scanned/image PDF and does not contain selectable text.
+
+**Recommended workaround:** run OCR in your PDF tool, then export to **.txt** (preferred) or a searchable PDF before uploading again.

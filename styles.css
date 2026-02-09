@@ -31,6 +31,8 @@ body { margin: 0; font-family: Inter, Arial, sans-serif; background: var(--bg); 
 .upload-item { border: 1px solid var(--border); border-radius: .7rem; padding: .8rem; display: flex; flex-direction: column; gap: .4rem; }
 .upload-item input { padding: .4rem; }
 .upload-item span { color: var(--muted); font-size: .9rem; }
+.parser-status { font-size: .82rem; color: #1d4ed8; }
+.parser-status.is-unavailable { color: #b91c1c; font-weight: 600; }
 .info-box { border-color: #abc7ff; background: #eef4ff; color: #244196; }
 .info-box h3 { margin-top: 0; }
 .info-box ol { margin: .2rem 0 0 1.3rem; padding: 0; display: grid; gap: .4rem; }
