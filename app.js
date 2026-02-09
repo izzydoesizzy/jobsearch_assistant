@@ -1,3 +1,38 @@
+const sourceConfigs = {
+  resume: {
+    label: "Resume",
+    file: "resumeFile",
+    status: "resumeStatus",
+    textarea: "resumePaste",
+    modeSelect: "resumeMode",
+    toggle: "resumeTogglePaste"
+  },
+  linkedin: {
+    label: "LinkedIn",
+    file: "linkedinFile",
+    status: "linkedinStatus",
+    textarea: "linkedinPaste",
+    modeSelect: "linkedinMode",
+    toggle: "linkedinTogglePaste"
+  },
+  voice: {
+    label: "Voice transcript",
+    file: "voiceFile",
+    status: "voiceStatus",
+    textarea: "voicePaste",
+    modeSelect: "voiceMode",
+    toggle: "voiceTogglePaste"
+  },
+  job: {
+    label: "Job posting",
+    file: "jobFile",
+    status: "jobStatus",
+    textarea: "jobPaste",
+    modeSelect: "jobMode",
+    toggle: "jobTogglePaste"
+  }
+};
+
 const els = {
   promptChecklist: document.getElementById("promptChecklist"),
   promptSearch: document.getElementById("promptSearch"),
@@ -5,22 +40,28 @@ const els = {
   generateDoc: document.getElementById("generateDoc"),
   apiKey: document.getElementById("apiKey"),
   modelName: document.getElementById("modelName"),
-  resumeFile: document.getElementById("resumeFile"),
-  linkedinFile: document.getElementById("linkedinFile"),
-  voiceFile: document.getElementById("voiceFile"),
-  jobFile: document.getElementById("jobFile"),
-  resumeStatus: document.getElementById("resumeStatus"),
-  linkedinStatus: document.getElementById("linkedinStatus"),
-  voiceStatus: document.getElementById("voiceStatus"),
-  jobStatus: document.getElementById("jobStatus"),
   markdownOutput: document.getElementById("markdownOutput"),
   downloadMd: document.getElementById("downloadMd")
 };
 
+Object.values(sourceConfigs).forEach((config) => {
+  els[config.file] = document.getElementById(config.file);
+  els[config.status] = document.getElementById(config.status);
+  els[config.textarea] = document.getElementById(config.textarea);
+  els[config.modeSelect] = document.getElementById(config.modeSelect);
+  els[config.toggle] = document.getElementById(config.toggle);
+});
+
 const state = {
   selectedPrompts: new Set(),
   outputMarkdown: "",
-  context: { resume: "", linkedin: "", voice: "", job: "" }
+  context: { resume: "", linkedin: "", voice: "", job: "" },
+  sources: {
+    resume: { fileText: "", fileName: "", pastedText: "", mode: "auto", textareaVisible: false },
+    linkedin: { fileText: "", fileName: "", pastedText: "", mode: "auto", textareaVisible: false },
+    voice: { fileText: "", fileName: "", pastedText: "", mode: "auto", textareaVisible: false },
+    job: { fileText: "", fileName: "", pastedText: "", mode: "auto", textareaVisible: false }
+  }
 };
 
 const storageKeys = { apiKey: "jobPromptOpenAIKey", model: "jobPromptModel" };
@@ -88,28 +129,128 @@ async function fileToText(file) {
   throw new Error("Unsupported file type. Use txt, md, pdf, or docx.");
 }
 
-function bindUpload(inputEl, statusEl, key) {
-  inputEl.addEventListener("change", async () => {
-    const file = inputEl.files[0];
-    if (!file) {
-      state.context[key] = "";
-      statusEl.textContent = "No file selected";
-      return;
-    }
+function getResolvedContextForKey(key) {
+  const source = state.sources[key];
+  const fileText = source.fileText.trim();
+  const pastedText = source.pastedText.trim();
 
-    statusEl.textContent = "Reading file...";
-    try {
-      const text = await fileToText(file);
-      state.context[key] = text.trim();
-      statusEl.textContent = `${file.name} (${Math.min(text.length, 99999)} chars extracted)`;
-    } catch (error) {
-      state.context[key] = "";
-      statusEl.textContent = `Failed: ${error.message}`;
-    }
+  // Precedence rules:
+  // 1) Explicit mode (file or pasted) wins when content exists.
+  // 2) Auto mode prefers pasted text when present, else file text.
+  if (source.mode === "file") return fileText;
+  if (source.mode === "pasted") return pastedText;
+  return pastedText || fileText;
+}
+
+function refreshAllResolvedContext() {
+  Object.keys(state.context).forEach((key) => {
+    state.context[key] = getResolvedContextForKey(key);
   });
 }
 
+function getSourceStatusText(key) {
+  const source = state.sources[key];
+  const hasFile = Boolean(source.fileText.trim());
+  const hasPaste = Boolean(source.pastedText.trim());
+  const fileChars = source.fileText.trim().length;
+  const pasteChars = source.pastedText.trim().length;
+  const modeLabel = source.mode === "auto" ? "Auto" : source.mode === "file" ? "Use file" : "Use pasted text";
+  const fileName = source.fileName || "file";
+
+  if (!hasFile && !hasPaste) return `${modeLabel}: no source selected`;
+  if (source.mode === "file" && hasFile) return `Using file: ${fileName} (${Math.min(fileChars, 99999)} chars extracted)`;
+  if (source.mode === "pasted" && hasPaste) return `Using pasted text (${Math.min(pasteChars, 99999)} chars)`;
+
+  if (source.mode === "file" && !hasFile) {
+    return hasPaste
+      ? `File mode selected, but no file text available (${Math.min(pasteChars, 99999)} chars pasted)`
+      : "File mode selected, but no file selected";
+  }
+
+  if (source.mode === "pasted" && !hasPaste) {
+    return hasFile
+      ? `Pasted mode selected, but textarea is empty (${Math.min(fileChars, 99999)} chars extracted from file)`
+      : "Pasted mode selected, but textarea is empty";
+  }
+
+  if (hasPaste && hasFile) {
+    return `Auto mode: using pasted text (${Math.min(pasteChars, 99999)} chars), file available (${Math.min(fileChars, 99999)} chars)`;
+  }
+
+  if (hasPaste) return `Auto mode: using pasted text (${Math.min(pasteChars, 99999)} chars)`;
+  return `Auto mode: using file ${fileName} (${Math.min(fileChars, 99999)} chars extracted)`;
+}
+
+function updateSourceUI(key) {
+  const config = sourceConfigs[key];
+  const source = state.sources[key];
+  const textareaEl = els[config.textarea];
+  const statusEl = els[config.status];
+  const modeSelectEl = els[config.modeSelect];
+  const toggleBtnEl = els[config.toggle];
+
+  textareaEl.classList.toggle("visible", source.textareaVisible);
+  toggleBtnEl.textContent = source.textareaVisible ? "Hide pasted text" : "Paste text instead";
+
+  const hasFile = Boolean(source.fileText.trim());
+  const hasPaste = Boolean(source.pastedText.trim());
+  modeSelectEl.disabled = !(hasFile && hasPaste);
+
+  statusEl.textContent = getSourceStatusText(key);
+  refreshAllResolvedContext();
+}
+
+function bindSource(key) {
+  const config = sourceConfigs[key];
+  const inputEl = els[config.file];
+  const textareaEl = els[config.textarea];
+  const modeSelectEl = els[config.modeSelect];
+  const toggleBtnEl = els[config.toggle];
+
+  inputEl.addEventListener("change", async () => {
+    const file = inputEl.files[0];
+    if (!file) {
+      state.sources[key].fileText = "";
+      state.sources[key].fileName = "";
+      updateSourceUI(key);
+      return;
+    }
+
+    els[config.status].textContent = "Reading file...";
+    try {
+      const text = await fileToText(file);
+      state.sources[key].fileText = text.trim();
+      state.sources[key].fileName = file.name;
+    } catch (error) {
+      state.sources[key].fileText = "";
+      state.sources[key].fileName = "";
+      els[config.status].textContent = `Failed: ${error.message}`;
+    }
+
+    updateSourceUI(key);
+  });
+
+  textareaEl.addEventListener("input", () => {
+    state.sources[key].pastedText = textareaEl.value.trim();
+    updateSourceUI(key);
+  });
+
+  modeSelectEl.addEventListener("change", () => {
+    state.sources[key].mode = modeSelectEl.value;
+    updateSourceUI(key);
+  });
+
+  toggleBtnEl.addEventListener("click", () => {
+    state.sources[key].textareaVisible = !state.sources[key].textareaVisible;
+    if (state.sources[key].textareaVisible) textareaEl.focus();
+    updateSourceUI(key);
+  });
+
+  updateSourceUI(key);
+}
+
 function buildContextMarkdown() {
+  refreshAllResolvedContext();
   const safe = (v) => (v && v.trim() ? v.trim() : "(not provided)");
   return [
     "## Context",
@@ -155,6 +296,7 @@ async function generateOnePromptOutput(prompt, apiKey, model, sharedContext) {
 }
 
 async function generateDocument() {
+  refreshAllResolvedContext();
   const apiKey = els.apiKey.value.trim();
   const model = els.modelName.value.trim() || "gpt-4.1-mini";
   const selected = prompts.filter((p) => state.selectedPrompts.has(p.id));
@@ -164,7 +306,7 @@ async function generateDocument() {
     return;
   }
   if (!state.context.resume) {
-    alert("Resume is required.");
+    alert("Resume is required. Upload a resume file or paste resume text.");
     return;
   }
   if (!selected.length) {
@@ -230,10 +372,7 @@ function init() {
   els.generateDoc.addEventListener("click", generateDocument);
   els.downloadMd.addEventListener("click", downloadMarkdown);
 
-  bindUpload(els.resumeFile, els.resumeStatus, "resume");
-  bindUpload(els.linkedinFile, els.linkedinStatus, "linkedin");
-  bindUpload(els.voiceFile, els.voiceStatus, "voice");
-  bindUpload(els.jobFile, els.jobStatus, "job");
+  Object.keys(sourceConfigs).forEach(bindSource);
 }
 
 init();

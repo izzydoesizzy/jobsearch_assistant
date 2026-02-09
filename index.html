@@ -45,18 +45,54 @@
           <div class="upload-grid">
             <label class="upload-item">Resume (required)
               <input type="file" id="resumeFile" accept=".txt,.md,.pdf,.doc,.docx" />
+              <div class="source-controls">
+                <button type="button" class="toggle-paste-btn" data-key="resume" id="resumeTogglePaste">Paste text instead</button>
+                <select id="resumeMode" class="source-mode-select" aria-label="Resume source mode">
+                  <option value="auto">Auto-select source</option>
+                  <option value="file">Use file</option>
+                  <option value="pasted">Use pasted text</option>
+                </select>
+              </div>
+              <textarea id="resumePaste" class="paste-textarea" placeholder="Paste resume text here..."></textarea>
               <span id="resumeStatus">No file selected</span>
             </label>
             <label class="upload-item">LinkedIn Profile (optional)
               <input type="file" id="linkedinFile" accept=".txt,.md,.pdf,.doc,.docx" />
+              <div class="source-controls">
+                <button type="button" class="toggle-paste-btn" data-key="linkedin" id="linkedinTogglePaste">Paste text instead</button>
+                <select id="linkedinMode" class="source-mode-select" aria-label="LinkedIn source mode">
+                  <option value="auto">Auto-select source</option>
+                  <option value="file">Use file</option>
+                  <option value="pasted">Use pasted text</option>
+                </select>
+              </div>
+              <textarea id="linkedinPaste" class="paste-textarea" placeholder="Paste LinkedIn profile text here..."></textarea>
               <span id="linkedinStatus">No file selected</span>
             </label>
             <label class="upload-item">Voice Transcript (optional)
               <input type="file" id="voiceFile" accept=".txt,.md,.pdf,.doc,.docx" />
+              <div class="source-controls">
+                <button type="button" class="toggle-paste-btn" data-key="voice" id="voiceTogglePaste">Paste text instead</button>
+                <select id="voiceMode" class="source-mode-select" aria-label="Voice source mode">
+                  <option value="auto">Auto-select source</option>
+                  <option value="file">Use file</option>
+                  <option value="pasted">Use pasted text</option>
+                </select>
+              </div>
+              <textarea id="voicePaste" class="paste-textarea" placeholder="Paste voice transcript text here..."></textarea>
               <span id="voiceStatus">No file selected</span>
             </label>
             <label class="upload-item">Job Posting (optional)
               <input type="file" id="jobFile" accept=".txt,.md,.pdf,.doc,.docx" />
+              <div class="source-controls">
+                <button type="button" class="toggle-paste-btn" data-key="job" id="jobTogglePaste">Paste text instead</button>
+                <select id="jobMode" class="source-mode-select" aria-label="Job source mode">
+                  <option value="auto">Auto-select source</option>
+                  <option value="file">Use file</option>
+                  <option value="pasted">Use pasted text</option>
+                </select>
+              </div>
+              <textarea id="jobPaste" class="paste-textarea" placeholder="Paste job posting text here..."></textarea>
               <span id="jobStatus">No file selected</span>
             </label>
           </div>
