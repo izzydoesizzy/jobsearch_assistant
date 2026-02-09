@@ -1,0 +1,12 @@
+const defaultAppConfig = {
+  fixedModel: "gpt-5.2",
+  globalContextDocument: "",
+  systemPromptPrefix: "You are a professional job search strategist. Follow requested structure strictly and return markdown only."
+};
+
+const deploymentEnvConfig = window.__JOB_ASSISTANT_ENV_CONFIG__ || {};
+
+window.appConfig = {
+  ...defaultAppConfig,
+  ...deploymentEnvConfig
+};

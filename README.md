@@ -48,11 +48,10 @@ http://localhost:5500
 ### 4) Use the app
 
 1. Paste your OpenAI API key.
-2. (Optional) Change model name.
-3. Upload your resume (required).
-4. Select prompts.
-5. Click **Generate Document**.
-6. Click **Download Markdown** when complete.
+2. Upload your resume (required).
+3. Select prompts.
+4. Click **Generate Document**.
+5. Click **Download Markdown** when complete.
 
 ---
 
@@ -130,5 +129,42 @@ Then open `http://localhost:8080`.
 ### OpenAI API errors in output
 
 - Confirm your API key is valid and active.
-- Confirm your selected model is available to your key.
+- The app uses a fixed model (`gpt-5.2`) and does not accept manual model changes.
 - Check browser devtools/network for details from the OpenAI API response.
+
+
+## Deployment-time configuration
+
+The app supports a small runtime configuration object loaded by `config.js`.
+
+- **App defaults** are defined in `config.js` (`defaultAppConfig`).
+- **Deployment env config** can override defaults by defining `window.__JOB_ASSISTANT_ENV_CONFIG__` *before* `config.js` runs (for example, via an injected script in your hosting layer).
+- **Runtime user content** (uploaded resume/linkedin/voice/job files) is applied at generation time and is treated as the highest-priority content for those sections.
+
+### Supported config fields
+
+- `fixedModel` (string): model used for all OpenAI requests.
+- `systemPromptPrefix` (string): system role instruction used in each request.
+- `globalContextDocument` (string): deployment-level instructions/context block inserted into prompt assembly.
+
+### Prompt assembly order (precedence chain)
+
+1. **App default config** (`config.js`)
+2. **Deployment env config** (`window.__JOB_ASSISTANT_ENV_CONFIG__`)
+3. **Runtime user content** (uploaded files in the browser session)
+
+`globalContextDocument` appears in the generated `## Context` block under `### Global Instructions / Context`, and that block is included in every prompt request and final markdown output.
+
+### Example deployment override
+
+```html
+<script>
+  window.__JOB_ASSISTANT_ENV_CONFIG__ = {
+    fixedModel: "gpt-5.2",
+    systemPromptPrefix: "You are an enterprise career strategist. Return markdown only.",
+    globalContextDocument: "Follow company-safe policy and avoid PII leakage."
+  };
+</script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+```

@@ -32,10 +32,7 @@
             API Key
             <input id="apiKey" type="password" placeholder="sk-..." />
           </label>
-          <label>
-            Model
-            <input id="modelName" type="text" value="gpt-4.1-mini" />
-          </label>
+          <p><strong>Model:</strong> <span id="modelName">gpt-5.2</span> (fixed)</p>
           <small>Your key is used only in-browser and stored in localStorage on this device.</small>
         </section>
 
@@ -119,6 +116,7 @@
     </main>
 
     <script src="data.js"></script>
+    <script src="config.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

@@ -1,3 +1,13 @@
+const runtimeConfig = window.appConfig || {};
+const APP_DEFAULT_CONFIG = {
+  fixedModel: "gpt-5.2",
+  globalContextDocument: "",
+  systemPromptPrefix: "You are a professional job search strategist. Follow requested structure strictly and return markdown only."
+};
+
+const config = {
+  ...APP_DEFAULT_CONFIG,
+  ...runtimeConfig
 const sourceConfigs = {
   resume: {
     label: "Resume",
@@ -64,7 +74,7 @@ const state = {
   }
 };
 
-const storageKeys = { apiKey: "jobPromptOpenAIKey", model: "jobPromptModel" };
+const storageKeys = { apiKey: "jobPromptOpenAIKey" };
 
 if (window.pdfjsLib) {
   window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.worker.min.js";
@@ -254,6 +264,7 @@ function buildContextMarkdown() {
   const safe = (v) => (v && v.trim() ? v.trim() : "(not provided)");
   return [
     "## Context",
+    `### Global Instructions / Context\n${safe(config.globalContextDocument)}`,
     `### Resume\n${safe(state.context.resume)}`,
     `### LinkedIn Profile\n${safe(state.context.linkedin)}`,
     `### Voice Transcript\n${safe(state.context.voice)}`,
@@ -261,8 +272,8 @@ function buildContextMarkdown() {
   ].join("\n\n");
 }
 
-async function generateOnePromptOutput(prompt, apiKey, model, sharedContext) {
-  const systemMessage = "You are a professional job search strategist. Follow requested structure strictly and return markdown only.";
+async function generateOnePromptOutput(prompt, apiKey, sharedContext) {
+  const systemMessage = config.systemPromptPrefix;
   const userMessage = [
     "Use the following context to answer the selected prompt.",
     sharedContext,
@@ -278,7 +289,7 @@ async function generateOnePromptOutput(prompt, apiKey, model, sharedContext) {
       Authorization: `Bearer ${apiKey}`
     },
     body: JSON.stringify({
-      model,
+      model: config.fixedModel,
       input: [
         { role: "system", content: [{ type: "input_text", text: systemMessage }] },
         { role: "user", content: [{ type: "input_text", text: userMessage }] }
@@ -298,7 +309,6 @@ async function generateOnePromptOutput(prompt, apiKey, model, sharedContext) {
 async function generateDocument() {
   refreshAllResolvedContext();
   const apiKey = els.apiKey.value.trim();
-  const model = els.modelName.value.trim() || "gpt-4.1-mini";
   const selected = prompts.filter((p) => state.selectedPrompts.has(p.id));
 
   if (!apiKey) {
@@ -315,7 +325,6 @@ async function generateDocument() {
   }
 
   localStorage.setItem(storageKeys.apiKey, apiKey);
-  localStorage.setItem(storageKeys.model, model);
 
   els.generateDoc.disabled = true;
   els.generateDoc.textContent = "Generating...";
@@ -328,14 +337,14 @@ async function generateDocument() {
     for (let i = 0; i < selected.length; i += 1) {
       const prompt = selected[i];
       els.markdownOutput.textContent = `Generating ${i + 1}/${selected.length}: ${prompt.title}`;
-      const result = await generateOnePromptOutput(prompt, apiKey, model, sharedContext);
+      const result = await generateOnePromptOutput(prompt, apiKey, sharedContext);
       sections.push(`## ${i + 1}. ${prompt.title}\n\n${result}`);
     }
 
     const finalMarkdown = [
       "# Job Search Analysis",
       `Generated: ${new Date().toISOString()}`,
-      `Model: ${model}`,
+      `Model: ${config.fixedModel}`,
       buildContextMarkdown(),
       "---",
       ...sections
@@ -365,7 +374,9 @@ function downloadMarkdown() {
 
 function init() {
   els.apiKey.value = localStorage.getItem(storageKeys.apiKey) || "";
-  els.modelName.value = localStorage.getItem(storageKeys.model) || "gpt-4.1-mini";
+  if (els.modelName) {
+    els.modelName.textContent = config.fixedModel;
+  }
 
   renderPromptChecklist();
   els.promptSearch.addEventListener("input", renderPromptChecklist);
