@@ -15,6 +15,19 @@
           <p id="selectedCount">0 of 0 selected</p>
         </div>
         <input id="promptSearch" type="search" placeholder="Search prompts" />
+
+        <section class="prompt-controls" aria-label="Prompt category controls">
+          <div id="categoryChips" class="category-chips"></div>
+          <div class="action-row">
+            <button id="selectCategory" class="btn btn-ghost" type="button">Select all in category</button>
+            <button id="clearCategory" class="btn btn-ghost" type="button">Clear category</button>
+          </div>
+          <div class="action-row">
+            <button id="selectVisible" class="btn btn-ghost" type="button">Select all visible</button>
+            <button id="clearVisible" class="btn btn-ghost" type="button">Clear visible</button>
+          </div>
+        </section>
+
         <div id="promptChecklist" class="prompt-checklist"></div>
         <button id="generateDoc" class="btn btn-primary">Generate Document</button>
       </aside>
@@ -31,10 +44,7 @@
             API Key
             <input id="apiKey" type="password" placeholder="sk-..." />
           </label>
-          <label>
-            Model
-            <input id="modelName" type="text" value="gpt-4.1-mini" />
-          </label>
+          <p><strong>Model:</strong> <span id="modelName">gpt-5.2</span> (fixed)</p>
           <small>Your key is used only in-browser and stored in localStorage on this device.</small>
         </section>
 
@@ -45,21 +55,57 @@
             <label class="upload-item">Resume (required)
               <input type="file" id="resumeFile" accept=".txt,.md,.pdf,.doc,.docx" />
               <span id="resumeParserStatus" class="parser-status">Checking PDF parser...</span>
+              <div class="source-controls">
+                <button type="button" class="toggle-paste-btn" data-key="resume" id="resumeTogglePaste">Paste text instead</button>
+                <select id="resumeMode" class="source-mode-select" aria-label="Resume source mode">
+                  <option value="auto">Auto-select source</option>
+                  <option value="file">Use file</option>
+                  <option value="pasted">Use pasted text</option>
+                </select>
+              </div>
+              <textarea id="resumePaste" class="paste-textarea" placeholder="Paste resume text here..."></textarea>
               <span id="resumeStatus">No file selected</span>
             </label>
             <label class="upload-item">LinkedIn Profile (optional)
               <input type="file" id="linkedinFile" accept=".txt,.md,.pdf,.doc,.docx" />
               <span id="linkedinParserStatus" class="parser-status">Checking PDF parser...</span>
+              <div class="source-controls">
+                <button type="button" class="toggle-paste-btn" data-key="linkedin" id="linkedinTogglePaste">Paste text instead</button>
+                <select id="linkedinMode" class="source-mode-select" aria-label="LinkedIn source mode">
+                  <option value="auto">Auto-select source</option>
+                  <option value="file">Use file</option>
+                  <option value="pasted">Use pasted text</option>
+                </select>
+              </div>
+              <textarea id="linkedinPaste" class="paste-textarea" placeholder="Paste LinkedIn profile text here..."></textarea>
               <span id="linkedinStatus">No file selected</span>
             </label>
             <label class="upload-item">Voice Transcript (optional)
               <input type="file" id="voiceFile" accept=".txt,.md,.pdf,.doc,.docx" />
               <span id="voiceParserStatus" class="parser-status">Checking PDF parser...</span>
+              <div class="source-controls">
+                <button type="button" class="toggle-paste-btn" data-key="voice" id="voiceTogglePaste">Paste text instead</button>
+                <select id="voiceMode" class="source-mode-select" aria-label="Voice source mode">
+                  <option value="auto">Auto-select source</option>
+                  <option value="file">Use file</option>
+                  <option value="pasted">Use pasted text</option>
+                </select>
+              </div>
+              <textarea id="voicePaste" class="paste-textarea" placeholder="Paste voice transcript text here..."></textarea>
               <span id="voiceStatus">No file selected</span>
             </label>
             <label class="upload-item">Job Posting (optional)
               <input type="file" id="jobFile" accept=".txt,.md,.pdf,.doc,.docx" />
               <span id="jobParserStatus" class="parser-status">Checking PDF parser...</span>
+              <div class="source-controls">
+                <button type="button" class="toggle-paste-btn" data-key="job" id="jobTogglePaste">Paste text instead</button>
+                <select id="jobMode" class="source-mode-select" aria-label="Job source mode">
+                  <option value="auto">Auto-select source</option>
+                  <option value="file">Use file</option>
+                  <option value="pasted">Use pasted text</option>
+                </select>
+              </div>
+              <textarea id="jobPaste" class="paste-textarea" placeholder="Paste job posting text here..."></textarea>
               <span id="jobStatus">No file selected</span>
             </label>
           </div>
@@ -87,6 +133,7 @@
 
     <script src="pdf-loader.js"></script>
     <script src="data.js"></script>
+    <script src="config.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
