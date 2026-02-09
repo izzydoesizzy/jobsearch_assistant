@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Job Search Prompts Library</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.min.js"></script>
+    <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
+  </head>
+  <body>
+    <main class="app-layout">
+      <aside class="prompt-sidebar">
+        <div class="sidebar-head">
+          <h2>Prompts Library</h2>
+          <p id="selectedCount">0 of 0 selected</p>
+        </div>
+        <input id="promptSearch" type="search" placeholder="Search prompts" />
+        <div id="promptChecklist" class="prompt-checklist"></div>
+        <button id="generateDoc" class="btn btn-primary">Generate Document</button>
+      </aside>
+
+      <section class="main-panel">
+        <header>
+          <h1>Client Document Generator</h1>
+          <p>Upload context files, choose prompts, and generate a markdown output.</p>
+        </header>
+
+        <section class="card api-card">
+          <h3>OpenAI Configuration</h3>
+          <label>
+            API Key
+            <input id="apiKey" type="password" placeholder="sk-..." />
+          </label>
+          <label>
+            Model
+            <input id="modelName" type="text" value="gpt-4.1-mini" />
+          </label>
+          <small>Your key is used only in-browser and stored in localStorage on this device.</small>
+        </section>
+
+        <section class="card">
+          <h3>Context Files</h3>
+          <p>Add at least a resume. Supported extraction: .txt/.md/.pdf/.docx</p>
+          <div class="upload-grid">
+            <label class="upload-item">Resume (required)
+              <input type="file" id="resumeFile" accept=".txt,.md,.pdf,.doc,.docx" />
+              <span id="resumeStatus">No file selected</span>
+            </label>
+            <label class="upload-item">LinkedIn Profile (optional)
+              <input type="file" id="linkedinFile" accept=".txt,.md,.pdf,.doc,.docx" />
+              <span id="linkedinStatus">No file selected</span>
+            </label>
+            <label class="upload-item">Voice Transcript (optional)
+              <input type="file" id="voiceFile" accept=".txt,.md,.pdf,.doc,.docx" />
+              <span id="voiceStatus">No file selected</span>
+            </label>
+            <label class="upload-item">Job Posting (optional)
+              <input type="file" id="jobFile" accept=".txt,.md,.pdf,.doc,.docx" />
+              <span id="jobStatus">No file selected</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="card info-box">
+          <h3>Getting Started</h3>
+          <ol>
+            <li>Add context files (at minimum, add a resume)</li>
+            <li>Select prompts from the left sidebar</li>
+            <li>Click "Generate Document" to process</li>
+            <li>Download your comprehensive analysis markdown</li>
+          </ol>
+        </section>
+
+        <section class="card">
+          <div class="output-head">
+            <h3>Generated Markdown</h3>
+            <button id="downloadMd" class="btn" disabled>Download .md</button>
+          </div>
+          <pre id="markdownOutput">No output generated yet.</pre>
+        </section>
+      </section>
+    </main>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
