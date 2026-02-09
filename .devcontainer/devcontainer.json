@@ -1,0 +1,11 @@
+{
+  "name": "jobsearch-assistant",
+  "postStartCommand": "bash -lc 'pgrep -f \"python3 -m http.server 5500 --bind 0.0.0.0\" >/dev/null || (nohup ./scripts/start.sh >/tmp/jobsearch-assistant.log 2>&1 &)'",
+  "forwardPorts": [5500],
+  "portsAttributes": {
+    "5500": {
+      "label": "Job Search Assistant",
+      "onAutoForward": "openPreview"
+    }
+  }
+}
