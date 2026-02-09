@@ -14,12 +14,40 @@ body { margin: 0; font-family: Inter, Arial, sans-serif; background: var(--bg); 
 .sidebar-head h2 { margin: 0 0 .4rem; }
 .sidebar-head p { margin: 0; opacity: .9; }
 #promptSearch { margin: .8rem; padding: .65rem; border: 1px solid var(--border); border-radius: .5rem; }
+.prompt-controls { padding: 0 .8rem .3rem; display: flex; flex-direction: column; gap: .5rem; }
+.category-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.chip {
+  border: 1px solid #b8c5ff;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3149ad;
+  font: inherit;
+  font-size: .82rem;
+  padding: .25rem .65rem;
+  cursor: pointer;
+}
+.chip.is-selected {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  box-shadow: 0 0 0 2px rgba(45, 76, 255, .18);
+}
+.action-row { display: flex; gap: .45rem; }
+.btn { border: none; border-radius: .55rem; padding: .7rem 1rem; cursor: pointer; font: inherit; }
+.btn-ghost {
+  flex: 1;
+  padding: .45rem .55rem;
+  border: 1px solid var(--border);
+  background: #f8faff;
+  color: #2a3b69;
+  font-size: .78rem;
+}
+.btn-ghost:disabled { opacity: .55; cursor: not-allowed; }
+.btn-primary { background: var(--primary); color: white; margin: .8rem; }
 .prompt-checklist { flex: 1; overflow: auto; padding: .4rem .8rem 1rem; display: flex; flex-direction: column; gap: .45rem; }
 .prompt-item { border: 1px solid var(--border); border-radius: .5rem; padding: .6rem; background: #fff; }
 .prompt-item label { display: flex; gap: .5rem; font-size: .92rem; font-weight: 600; }
 .prompt-item small { color: var(--muted); display: block; margin-top: .4rem; }
-.btn { border: none; border-radius: .55rem; padding: .7rem 1rem; cursor: pointer; font: inherit; }
-.btn-primary { background: var(--primary); color: white; margin: .8rem; }
 .main-panel { padding: 1.2rem 1.4rem; display: flex; flex-direction: column; gap: 1rem; }
 .main-panel h1 { margin: 0 0 .25rem; font-size: 2.25rem; }
 .main-panel header p { margin: 0; color: var(--muted); font-size: 1.35rem; }
@@ -41,4 +69,8 @@ body { margin: 0; font-family: Inter, Arial, sans-serif; background: var(--bg); 
   .prompt-sidebar { max-height: 48vh; }
   .upload-grid, .api-card { grid-template-columns: 1fr; }
   .main-panel h1 { font-size: 1.8rem; }
+}
+@media (max-width: 520px) {
+  .action-row { flex-wrap: wrap; }
+  .btn-ghost { flex: 1 1 100%; }
 }

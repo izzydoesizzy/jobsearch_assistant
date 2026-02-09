@@ -16,6 +16,19 @@
           <p id="selectedCount">0 of 0 selected</p>
         </div>
         <input id="promptSearch" type="search" placeholder="Search prompts" />
+
+        <section class="prompt-controls" aria-label="Prompt category controls">
+          <div id="categoryChips" class="category-chips"></div>
+          <div class="action-row">
+            <button id="selectCategory" class="btn btn-ghost" type="button">Select all in category</button>
+            <button id="clearCategory" class="btn btn-ghost" type="button">Clear category</button>
+          </div>
+          <div class="action-row">
+            <button id="selectVisible" class="btn btn-ghost" type="button">Select all visible</button>
+            <button id="clearVisible" class="btn btn-ghost" type="button">Clear visible</button>
+          </div>
+        </section>
+
         <div id="promptChecklist" class="prompt-checklist"></div>
         <button id="generateDoc" class="btn btn-primary">Generate Document</button>
       </aside>
