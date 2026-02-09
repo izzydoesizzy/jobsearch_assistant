@@ -47,6 +47,11 @@ const els = {
   promptChecklist: document.getElementById("promptChecklist"),
   promptSearch: document.getElementById("promptSearch"),
   selectedCount: document.getElementById("selectedCount"),
+  categoryChips: document.getElementById("categoryChips"),
+  selectCategory: document.getElementById("selectCategory"),
+  clearCategory: document.getElementById("clearCategory"),
+  selectVisible: document.getElementById("selectVisible"),
+  clearVisible: document.getElementById("clearVisible"),
   generateDoc: document.getElementById("generateDoc"),
   apiKey: document.getElementById("apiKey"),
   modelName: document.getElementById("modelName"),
@@ -64,6 +69,8 @@ Object.values(sourceConfigs).forEach((config) => {
 
 const state = {
   selectedPrompts: new Set(),
+  activeCategories: new Set(),
+  categoryIndex: new Map(),
   outputMarkdown: "",
   context: { resume: "", linkedin: "", voice: "", job: "" },
   sources: {
@@ -80,9 +87,84 @@ if (window.pdfjsLib) {
   window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.worker.min.js";
 }
 
+function buildCategoryIndex() {
+  const index = new Map();
+  prompts.forEach((prompt) => {
+    (prompt.categories || []).forEach((category) => {
+      if (!index.has(category)) {
+        index.set(category, new Set());
+      }
+      index.get(category).add(prompt.id);
+    });
+  });
+  state.categoryIndex = index;
+}
+
+function getVisiblePrompts() {
+  const query = els.promptSearch.value.toLowerCase().trim();
+  return prompts.filter((p) => {
+    const matchesSearch = `${p.title} ${p.description}`.toLowerCase().includes(query);
+    const matchesCategory = !state.activeCategories.size
+      || (p.categories || []).some((category) => state.activeCategories.has(category));
+    return matchesSearch && matchesCategory;
+  });
+}
+
+function renderCategoryChips() {
+  const categories = [...state.categoryIndex.keys()].sort((a, b) => a.localeCompare(b));
+  els.categoryChips.innerHTML = categories
+    .map((category) => `
+      <button
+        type="button"
+        class="chip ${state.activeCategories.has(category) ? "is-selected" : ""}"
+        data-category="${category}"
+      >
+        ${category}
+      </button>
+    `)
+    .join("");
+
+  els.categoryChips.querySelectorAll("button[data-category]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const { category } = button.dataset;
+      if (state.activeCategories.has(category)) {
+        state.activeCategories.delete(category);
+      } else {
+        state.activeCategories.add(category);
+      }
+      renderCategoryChips();
+      renderPromptChecklist();
+    });
+  });
+
+  const hasCategorySelection = state.activeCategories.size > 0;
+  els.selectCategory.disabled = !hasCategorySelection;
+  els.clearCategory.disabled = !hasCategorySelection;
+}
+
+function applyBulkSelection(promptIds, shouldSelect) {
+  promptIds.forEach((id) => {
+    if (shouldSelect) {
+      state.selectedPrompts.add(id);
+    } else {
+      state.selectedPrompts.delete(id);
+    }
+  });
+  renderPromptChecklist();
+}
+
+function getActiveCategoryPromptIds() {
+  const ids = new Set();
+  state.activeCategories.forEach((category) => {
+    const categoryPrompts = state.categoryIndex.get(category);
+    if (!categoryPrompts) return;
+    categoryPrompts.forEach((id) => ids.add(id));
+  });
+  return [...ids];
+}
+
 function renderPromptChecklist() {
-  const query = els.promptSearch.value.toLowerCase();
-  const filtered = prompts.filter((p) => `${p.title} ${p.description}`.toLowerCase().includes(query));
+  const filtered = getVisiblePrompts();
   els.promptChecklist.innerHTML = filtered
     .map((p) => `
       <article class="prompt-item">
@@ -378,8 +460,16 @@ function init() {
     els.modelName.textContent = config.fixedModel;
   }
 
+  buildCategoryIndex();
+  renderCategoryChips();
   renderPromptChecklist();
+
   els.promptSearch.addEventListener("input", renderPromptChecklist);
+  els.selectCategory.addEventListener("click", () => applyBulkSelection(getActiveCategoryPromptIds(), true));
+  els.clearCategory.addEventListener("click", () => applyBulkSelection(getActiveCategoryPromptIds(), false));
+  els.selectVisible.addEventListener("click", () => applyBulkSelection(getVisiblePrompts().map((p) => p.id), true));
+  els.clearVisible.addEventListener("click", () => applyBulkSelection(getVisiblePrompts().map((p) => p.id), false));
+
   els.generateDoc.addEventListener("click", generateDocument);
   els.downloadMd.addEventListener("click", downloadMarkdown);
 
