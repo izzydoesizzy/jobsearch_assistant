@@ -14,13 +14,18 @@ const els = {
   voiceStatus: document.getElementById("voiceStatus"),
   jobStatus: document.getElementById("jobStatus"),
   markdownOutput: document.getElementById("markdownOutput"),
-  downloadMd: document.getElementById("downloadMd")
+  renderedOutput: document.getElementById("renderedOutput"),
+  generationStatus: document.getElementById("generationStatus"),
+  downloadMd: document.getElementById("downloadMd"),
+  copyMarkdown: document.getElementById("copyMarkdown"),
+  printDocument: document.getElementById("printDocument")
 };
 
 const state = {
   selectedPrompts: new Set(),
   outputMarkdown: "",
-  context: { resume: "", linkedin: "", voice: "", job: "" }
+  context: { resume: "", linkedin: "", voice: "", job: "" },
+  generationToken: 0
 };
 
 const storageKeys = { apiKey: "jobPromptOpenAIKey", model: "jobPromptModel" };
@@ -109,6 +114,36 @@ function bindUpload(inputEl, statusEl, key) {
   });
 }
 
+
+function renderMarkdown(markdown) {
+  if (!markdown) {
+    els.renderedOutput.innerHTML = '<p class="placeholder">Generated markdown will be rendered here.</p>';
+    return;
+  }
+
+  const parser = window.marked;
+  if (!parser || !window.DOMPurify) {
+    els.renderedOutput.innerHTML = '<p class="placeholder">Markdown renderer is unavailable.</p>';
+    return;
+  }
+
+  parser.setOptions({ breaks: true, gfm: true });
+  const html = parser.parse(markdown);
+  const cleanHtml = window.DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
+  els.renderedOutput.innerHTML = cleanHtml;
+}
+
+function setGenerationStatus(message, kind = "info") {
+  els.generationStatus.textContent = message;
+  els.generationStatus.dataset.kind = kind;
+}
+
+function setExportButtonsEnabled(enabled) {
+  els.downloadMd.disabled = !enabled;
+  els.copyMarkdown.disabled = !enabled;
+  els.printDocument.disabled = !enabled;
+}
+
 function buildContextMarkdown() {
   const safe = (v) => (v && v.trim() ? v.trim() : "(not provided)");
   return [
@@ -175,8 +210,13 @@ async function generateDocument() {
   localStorage.setItem(storageKeys.apiKey, apiKey);
   localStorage.setItem(storageKeys.model, model);
 
+  const generationToken = Date.now();
+  state.generationToken = generationToken;
+
   els.generateDoc.disabled = true;
   els.generateDoc.textContent = "Generating...";
+  setExportButtonsEnabled(false);
+  setGenerationStatus("Generating document...", "progress");
   els.markdownOutput.textContent = "Generating document...";
 
   try {
@@ -185,7 +225,8 @@ async function generateDocument() {
 
     for (let i = 0; i < selected.length; i += 1) {
       const prompt = selected[i];
-      els.markdownOutput.textContent = `Generating ${i + 1}/${selected.length}: ${prompt.title}`;
+      if (state.generationToken !== generationToken) return;
+      setGenerationStatus(`Generating ${i + 1}/${selected.length}: ${prompt.title}`, "progress");
       const result = await generateOnePromptOutput(prompt, apiKey, model, sharedContext);
       sections.push(`## ${i + 1}. ${prompt.title}\n\n${result}`);
     }
@@ -199,11 +240,18 @@ async function generateDocument() {
       ...sections
     ].join("\n\n");
 
+    if (state.generationToken !== generationToken) return;
+
     state.outputMarkdown = finalMarkdown;
     els.markdownOutput.textContent = finalMarkdown;
-    els.downloadMd.disabled = false;
+    renderMarkdown(finalMarkdown);
+    setGenerationStatus("Generation complete.", "success");
+    setExportButtonsEnabled(true);
   } catch (error) {
+    if (state.generationToken !== generationToken) return;
     els.markdownOutput.textContent = `Generation failed: ${error.message}`;
+    renderMarkdown("");
+    setGenerationStatus(`Generation failed: ${error.message}`, "error");
   } finally {
     els.generateDoc.disabled = false;
     els.generateDoc.textContent = "Generate Document";
@@ -221,6 +269,23 @@ function downloadMarkdown() {
   URL.revokeObjectURL(url);
 }
 
+
+
+async function copyMarkdown() {
+  if (!state.outputMarkdown) return;
+  try {
+    await navigator.clipboard.writeText(state.outputMarkdown);
+    setGenerationStatus("Markdown copied to clipboard.", "success");
+  } catch (error) {
+    setGenerationStatus(`Copy failed: ${error.message}`, "error");
+  }
+}
+
+function printDocument() {
+  if (!state.outputMarkdown) return;
+  window.print();
+}
+
 function init() {
   els.apiKey.value = localStorage.getItem(storageKeys.apiKey) || "";
   els.modelName.value = localStorage.getItem(storageKeys.model) || "gpt-4.1-mini";
@@ -229,11 +294,16 @@ function init() {
   els.promptSearch.addEventListener("input", renderPromptChecklist);
   els.generateDoc.addEventListener("click", generateDocument);
   els.downloadMd.addEventListener("click", downloadMarkdown);
+  els.copyMarkdown.addEventListener("click", copyMarkdown);
+  els.printDocument.addEventListener("click", printDocument);
 
   bindUpload(els.resumeFile, els.resumeStatus, "resume");
   bindUpload(els.linkedinFile, els.linkedinStatus, "linkedin");
   bindUpload(els.voiceFile, els.voiceStatus, "voice");
   bindUpload(els.jobFile, els.jobStatus, "job");
+
+  setExportButtonsEnabled(false);
+  renderMarkdown("");
 }
 
 init();

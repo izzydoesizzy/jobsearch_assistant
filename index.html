@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.min.js"></script>
     <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"></script>
   </head>
   <body>
     <main class="app-layout">
@@ -74,10 +76,21 @@
 
         <section class="card">
           <div class="output-head">
-            <h3>Generated Markdown</h3>
-            <button id="downloadMd" class="btn" disabled>Download .md</button>
+            <h3>Generated Output</h3>
+            <div class="output-actions">
+              <button id="copyMarkdown" class="btn" disabled>Copy Markdown</button>
+              <button id="printDocument" class="btn" disabled>Print / Save PDF</button>
+              <button id="downloadMd" class="btn" disabled>Download .md</button>
+            </div>
           </div>
-          <pre id="markdownOutput">No output generated yet.</pre>
+          <p id="generationStatus" class="generation-status">No output generated yet.</p>
+          <details class="raw-markdown-panel">
+            <summary>Raw Markdown</summary>
+            <pre id="markdownOutput">No output generated yet.</pre>
+          </details>
+          <article id="renderedOutput" class="rendered-output">
+            <p class="placeholder">Generated markdown will be rendered here.</p>
+          </article>
         </section>
       </section>
     </main>
