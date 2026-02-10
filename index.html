@@ -9,122 +9,134 @@
     <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
   </head>
   <body>
-    <main class="app-layout">
-      <aside class="prompt-sidebar">
-        <div class="sidebar-head">
-          <h2>Prompts Library</h2>
-          <p id="selectedCount">0 of 0 selected</p>
+    <header class="top-banner">
+      <div class="top-banner-inner">
+        <strong>Job Search Assistant</strong>
+        <span>Modern strategy generation for applications, networking, and interviews.</span>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="hero">
+        <p class="hero-pill">Built for ambitious job seekers</p>
+        <h1>
+          Generate a polished career strategy doc in minutes.
+          <span>Built with a Product Hunt-style experience.</span>
+        </h1>
+        <p class="hero-copy">
+          Upload resume + supporting docs, choose prompts, and get one high-signal markdown output.
+        </p>
+      </section>
+
+      <section class="card api-notice">
+        <h2>Server-side model setup</h2>
+        <p class="meta">API keys are now handled on the backend. This UI sends prompt + context payloads to your server endpoint.</p>
+        <p class="meta"><strong>Model:</strong> <span id="modelName">gpt-5.2</span> (configured server-side)</p>
+      </section>
+
+      <section class="card">
+        <h2>1) Required Resume Context</h2>
+        <label class="upload-item">Resume (required)
+          <input type="file" id="resumeFile" accept=".txt,.md,.pdf,.doc,.docx,.rtf,.csv,.json" />
+          <div class="source-controls">
+            <button type="button" class="btn btn-ghost toggle-paste-btn" id="resumeTogglePaste">Paste text instead</button>
+            <select id="resumeMode" class="source-mode-select" aria-label="Resume source mode">
+              <option value="auto">Auto-select source</option>
+              <option value="file">Use file</option>
+              <option value="pasted">Use pasted text</option>
+            </select>
+          </div>
+          <textarea id="resumePaste" class="paste-textarea" placeholder="Paste resume text here..."></textarea>
+          <span id="resumeStatus" class="status-text">No file selected</span>
+        </label>
+      </section>
+
+      <section class="card">
+        <h2>2) Additional Documents (drag & drop)</h2>
+        <p class="meta">Drop multiple files at once (.txt, .md, .pdf, .docx, .rtf, .json, .csv).</p>
+        <div id="extraDropzone" class="dropzone" tabindex="0" role="button" aria-label="Upload additional documents">
+          Drop files here or click to choose
         </div>
-        <input id="promptSearch" type="search" placeholder="Search prompts" />
+        <input id="extraFiles" type="file" multiple hidden accept=".txt,.md,.pdf,.doc,.docx,.rtf,.csv,.json" />
+        <ul id="extraFileList" class="file-list"></ul>
+        <p id="extraStatus" class="status-text">No additional files added.</p>
+      </section>
 
-        <section class="prompt-controls" aria-label="Prompt category controls">
-          <div id="categoryChips" class="category-chips"></div>
-          <div class="action-row">
-            <button id="selectCategory" class="btn btn-ghost" type="button">Select all in category</button>
-            <button id="clearCategory" class="btn btn-ghost" type="button">Clear category</button>
-          </div>
-          <div class="action-row">
-            <button id="selectVisible" class="btn btn-ghost" type="button">Select all visible</button>
-            <button id="clearVisible" class="btn btn-ghost" type="button">Clear visible</button>
-          </div>
-        </section>
-
-        <div id="promptChecklist" class="prompt-checklist"></div>
-        <button id="generateDoc" class="btn btn-primary">Generate Document</button>
-      </aside>
-
-      <section class="main-panel">
-        <header>
-          <h1>Client Document Generator</h1>
-          <p>Upload context files, choose prompts, and generate a markdown output.</p>
-        </header>
-
-        <section class="card api-card">
-          <h3>OpenAI Configuration</h3>
-          <label>
-            API Key
-            <input id="apiKey" type="password" placeholder="sk-..." />
-          </label>
-          <p><strong>Model:</strong> <span id="modelName">gpt-5.2</span> (fixed)</p>
-          <small>Your key is used only in-browser and stored in localStorage on this device.</small>
-        </section>
-
-        <section class="card">
-          <h3>Context Files</h3>
-          <p>Add at least a resume. Supported extraction: .txt/.md/.pdf/.docx</p>
+      <section class="card is-collapsible" id="optionalSourcesCard">
+        <details>
+          <summary>Optional named context sources</summary>
           <div class="upload-grid">
-            <label class="upload-item">Resume (required)
-              <input type="file" id="resumeFile" accept=".txt,.md,.pdf,.doc,.docx" />
+            <label class="upload-item">LinkedIn Profile
+              <input type="file" id="linkedinFile" accept=".txt,.md,.pdf,.doc,.docx,.rtf,.csv,.json" />
               <div class="source-controls">
-                <button type="button" class="toggle-paste-btn" data-key="resume" id="resumeTogglePaste">Paste text instead</button>
-                <select id="resumeMode" class="source-mode-select" aria-label="Resume source mode">
-                  <option value="auto">Auto-select source</option>
-                  <option value="file">Use file</option>
-                  <option value="pasted">Use pasted text</option>
-                </select>
-              </div>
-              <textarea id="resumePaste" class="paste-textarea" placeholder="Paste resume text here..."></textarea>
-              <span id="resumeStatus">No file selected</span>
-            </label>
-            <label class="upload-item">LinkedIn Profile (optional)
-              <input type="file" id="linkedinFile" accept=".txt,.md,.pdf,.doc,.docx" />
-              <div class="source-controls">
-                <button type="button" class="toggle-paste-btn" data-key="linkedin" id="linkedinTogglePaste">Paste text instead</button>
+                <button type="button" class="btn btn-ghost toggle-paste-btn" id="linkedinTogglePaste">Paste text instead</button>
                 <select id="linkedinMode" class="source-mode-select" aria-label="LinkedIn source mode">
                   <option value="auto">Auto-select source</option>
                   <option value="file">Use file</option>
                   <option value="pasted">Use pasted text</option>
                 </select>
               </div>
-              <textarea id="linkedinPaste" class="paste-textarea" placeholder="Paste LinkedIn profile text here..."></textarea>
-              <span id="linkedinStatus">No file selected</span>
+              <textarea id="linkedinPaste" class="paste-textarea" placeholder="Paste LinkedIn profile text..."></textarea>
+              <span id="linkedinStatus" class="status-text">No file selected</span>
             </label>
-            <label class="upload-item">Voice Transcript (optional)
-              <input type="file" id="voiceFile" accept=".txt,.md,.pdf,.doc,.docx" />
+            <label class="upload-item">Voice Transcript
+              <input type="file" id="voiceFile" accept=".txt,.md,.pdf,.doc,.docx,.rtf,.csv,.json" />
               <div class="source-controls">
-                <button type="button" class="toggle-paste-btn" data-key="voice" id="voiceTogglePaste">Paste text instead</button>
+                <button type="button" class="btn btn-ghost toggle-paste-btn" id="voiceTogglePaste">Paste text instead</button>
                 <select id="voiceMode" class="source-mode-select" aria-label="Voice source mode">
                   <option value="auto">Auto-select source</option>
                   <option value="file">Use file</option>
                   <option value="pasted">Use pasted text</option>
                 </select>
               </div>
-              <textarea id="voicePaste" class="paste-textarea" placeholder="Paste voice transcript text here..."></textarea>
-              <span id="voiceStatus">No file selected</span>
+              <textarea id="voicePaste" class="paste-textarea" placeholder="Paste transcript text..."></textarea>
+              <span id="voiceStatus" class="status-text">No file selected</span>
             </label>
-            <label class="upload-item">Job Posting (optional)
-              <input type="file" id="jobFile" accept=".txt,.md,.pdf,.doc,.docx" />
+            <label class="upload-item">Job Posting
+              <input type="file" id="jobFile" accept=".txt,.md,.pdf,.doc,.docx,.rtf,.csv,.json" />
               <div class="source-controls">
-                <button type="button" class="toggle-paste-btn" data-key="job" id="jobTogglePaste">Paste text instead</button>
+                <button type="button" class="btn btn-ghost toggle-paste-btn" id="jobTogglePaste">Paste text instead</button>
                 <select id="jobMode" class="source-mode-select" aria-label="Job source mode">
                   <option value="auto">Auto-select source</option>
                   <option value="file">Use file</option>
                   <option value="pasted">Use pasted text</option>
                 </select>
               </div>
-              <textarea id="jobPaste" class="paste-textarea" placeholder="Paste job posting text here..."></textarea>
-              <span id="jobStatus">No file selected</span>
+              <textarea id="jobPaste" class="paste-textarea" placeholder="Paste job posting text..."></textarea>
+              <span id="jobStatus" class="status-text">No file selected</span>
             </label>
           </div>
-        </section>
+        </details>
+      </section>
 
-        <section class="card info-box">
-          <h3>Getting Started</h3>
-          <ol>
-            <li>Add context files (at minimum, add a resume)</li>
-            <li>Select prompts from the left sidebar</li>
-            <li>Click "Generate Document" to process</li>
-            <li>Download your comprehensive analysis markdown</li>
-          </ol>
-        </section>
+      <section id="promptsSection" class="card hidden">
+        <h2>3) Select prompts</h2>
+        <p id="selectedCount" class="meta">0 of 0 selected</p>
+        <input id="promptSearch" type="search" placeholder="Search prompts" />
+        <div id="categoryChips" class="category-chips"></div>
+        <div class="action-row">
+          <button id="selectCategory" class="btn btn-ghost" type="button">Select category</button>
+          <button id="clearCategory" class="btn btn-ghost" type="button">Clear category</button>
+          <button id="selectVisible" class="btn btn-ghost" type="button">Select visible</button>
+          <button id="clearVisible" class="btn btn-ghost" type="button">Clear visible</button>
+        </div>
+        <div id="promptChecklist" class="prompt-checklist"></div>
+      </section>
 
-        <section class="card">
-          <div class="output-head">
-            <h3>Generated Markdown</h3>
-            <button id="downloadMd" class="btn" disabled>Download .md</button>
-          </div>
-          <pre id="markdownOutput">No output generated yet.</pre>
-        </section>
+      <section id="generateSection" class="card hidden">
+        <button id="generateDoc" class="btn btn-primary">Generate Document</button>
+      </section>
+
+      <section id="outputSection" class="card hidden">
+        <div class="output-head">
+          <h2>Output</h2>
+          <button id="downloadMd" class="btn btn-ghost" disabled>Download .md</button>
+        </div>
+        <div id="loadingPanel" class="loading-panel" aria-live="polite" hidden>
+          <div class="loader-orb" aria-hidden="true"></div>
+          <p id="loadingQuote" class="loading-quote">Sharpening your story for maximum impact.</p>
+        </div>
+        <pre id="markdownOutput">No output generated yet.</pre>
       </section>
     </main>
 
