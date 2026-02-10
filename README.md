@@ -1,6 +1,6 @@
 # Job Search Assistant
 
-A browser-based assistant that helps you combine your resume + job-search context with curated prompts, then generates a markdown report using the OpenAI Responses API.
+A browser-based assistant that helps you combine your resume + job-search context with curated prompts, then generates a markdown report through a backend generation API.
 
 ---
 
@@ -12,7 +12,7 @@ A browser-based assistant that helps you combine your resume + job-search contex
   - Voice transcript (optional)
   - Job posting (optional)
 - Lets you select one or many prebuilt prompts.
-- Sends your selected prompt(s) + context to OpenAI.
+- Sends your selected prompt(s) + context to your backend generation endpoint.
 - Produces one combined markdown document you can review and download.
 
 ---
@@ -47,8 +47,8 @@ http://localhost:5500
 
 ### 4) Use the app
 
-1. Paste your OpenAI API key.
-2. Upload your resume (required).
+1. Upload your resume (required).
+2. Add optional supporting documents (including drag/drop multi-file upload).
 3. Select prompts.
 4. Click **Generate Document**.
 5. Click **Download Markdown** when complete.
@@ -126,11 +126,11 @@ PORT=8080 ./scripts/start.sh
 
 Then open `http://localhost:8080`.
 
-### OpenAI API errors in output
+### Generation API errors in output
 
-- Confirm your API key is valid and active.
-- The app uses a fixed model (`gpt-5.2`) and does not accept manual model changes.
-- Check browser devtools/network for details from the OpenAI API response.
+- Confirm your backend `/api/generate` route is running and has a valid server-side OpenAI key.
+- The app sends prompt + context to the backend endpoint configured in `backendGenerateEndpoint`.
+- Check browser devtools/network and backend logs for details from your server response.
 
 
 ## Deployment-time configuration
@@ -146,6 +146,7 @@ The app supports a small runtime configuration object loaded by `config.js`.
 - `fixedModel` (string): model used for all OpenAI requests.
 - `systemPromptPrefix` (string): system role instruction used in each request.
 - `globalContextDocument` (string): deployment-level instructions/context block inserted into prompt assembly.
+- `backendGenerateEndpoint` (string): backend route this frontend will POST generation requests to (default `/api/generate`).
 
 ### Prompt assembly order (precedence chain)
 
